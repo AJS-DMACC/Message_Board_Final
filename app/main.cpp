@@ -3,12 +3,10 @@
 #include "database.h"
 using namespace std;
 
-
+bool rebuild=true;
 int main()
 {
-    Database database;
-    database.open();
-    database.close();
+    if(rebuild){Database database; database.open(); database.rebuild(); database.close();}
     HttpServer server;
 
     server.startServer();

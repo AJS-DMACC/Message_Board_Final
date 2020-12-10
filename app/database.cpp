@@ -17,6 +17,20 @@ void Database::open() {
 }
 
 void Database::close() {
+    db.commit();
     db.close();
     QSqlDatabase::removeDatabase(DRIVER);
+}
+
+void Database::rebuild(){
+    QSqlQuery query;
+    query.exec("create table if not exists users(USER_ID int NOT NULL AUTO_INCREMENT, USERNAME varchar(30) not null, PASSWORD varchar(30) not null, primary key (USER_ID));");
+}
+
+void Database::createUser(const char* username,const char* password){
+    QSqlQuery insertUser;
+    insertUser.prepare("INSERT INTO users (USERNAME, PASSWORD) VALUES (:username, :password)");
+    insertUser.bindValue(":username", username);
+    insertUser.bindValue(":password",  password);
+    insertUser.exec();
 }

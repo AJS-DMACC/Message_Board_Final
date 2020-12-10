@@ -20,8 +20,9 @@ private:
 public:
     Database();
     void open();
-    void rebuildTestDatabase();
+    void rebuild();
     void close();
+    void createUser(const char*,const char*);
 
 };
 

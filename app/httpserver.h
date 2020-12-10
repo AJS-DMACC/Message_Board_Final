@@ -7,6 +7,7 @@
 #include <QDir>
 #include <sstream>
 #include "httplib.h"
+#include "database.h"
 using namespace std;
 using namespace httplib;
 
@@ -21,12 +22,47 @@ public:
         svr.Get("/", [this](const Request&, Response& res) {            
             stringstream body;
             body << formatPage();
-            body << "<h1>Welcome to Culinary Discussion Board</h1>";
-            body << "<p>To view an account balance visit http://localhost:" << this->port;
-            body << "/accounts/x where x is the account number.</p></html>";
+            body << "<h1>Welcome to Culinary Discussion Board</h1><form method = \"POST\"><p>Username</p>";
+            body << "<input type=\"text\" name=\"username\"><p>Password </p><input type=\"text\" name=\"password\" >";
+            body << "<input type=\"submit\">";
+            body << "</form><a href=\"signup\">Not a Member? Sign Up</a></html>";
+            res.set_content(body.str(), "text/html");
+        });        
+
+        svr.Post("/", [](const Request &req, Response &res) {
+            string formValue = req.get_param_value("username");
+            cout << "Username: " << formValue;
+            /*auto image_file = req.get_file_value("image_file");
+            auto text_file = req.get_file_value("text_file");
+
+            cout << "image file length: " << image_file.content.length() << endl
+                 << "image file name: " << image_file.filename << endl
+                 << "text file length: " << text_file.content.length() << endl
+                 << "text file name: " << text_file.filename << endl;*/
+
+            res.set_content("GOT To Post mapping", "text/plain");
+          });
+
+
+        svr.Get("/signup", [this](const Request&, Response& res) {
+            stringstream body;
+            body << formatPage();
+            body << "<h1>Sign Up for the Discussion Board</h1><form method = \"POST\"><p>Create a Username</p>";
+            body << "<input type=\"text\" name=\"username\"><p>Create a Password </p><input type=\"text\" name=\"password\" >";
+            body << "</<input type=\"submit\"></form></html>";
             res.set_content(body.str(), "text/html");
         });
 
+        svr.Post("/signup", [](const Request &req, Response &res) {
+            string username = req.get_param_value("username");
+            string password = req.get_param_value("password");
+
+            Database database;
+            database.open();
+            database.createUser(username.c_str(), password.c_str());
+            database.close();
+            res.set_content("GOT To Database Mapping", "text/plain");
+          });
         /*
         svr.Get(R"(/accounts/(\d+))", [&](const Request& req, Response& res) {
           Database database;
