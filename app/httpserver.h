@@ -23,13 +23,14 @@ public:
             stringstream body;
             body << formatPage();
             body << "<h1>Welcome to Culinary Discussion Board</h1><form method = \"POST\"><p>Username</p>";
-            body << "<input type=\"text\" name=\"username\"><p>Password </p><input type=\"text\" name=\"password\" >";
+            body << "<input type=\"text\" name=\"username\"><p>Password </p><input type=\"text\" name=\"password\" </br> >";
             body << "<input type=\"submit\">";
             body << "</form><a href=\"signup\">Not a Member? Sign Up</a></html>";
             res.set_content(body.str(), "text/html");
         });        
 
         svr.Post("/", [](const Request &req, Response &res) {
+            string formValue = req.get_param_value("username");
             string formValue = req.get_param_value("username");
             cout << "Username: " << formValue;
             /*auto image_file = req.get_file_value("image_file");
@@ -49,7 +50,8 @@ public:
             body << formatPage();
             body << "<h1>Sign Up for the Discussion Board</h1><form method = \"POST\"><p>Create a Username</p>";
             body << "<input type=\"text\" name=\"username\"><p>Create a Password </p><input type=\"text\" name=\"password\" >";
-            body << "</<input type=\"submit\"></form></html>";
+            body << "<input type=\"submit\">";
+            body <<"</form></html>";
             res.set_content(body.str(), "text/html");
         });
 
@@ -61,7 +63,7 @@ public:
             database.open();
             database.createUser(username.c_str(), password.c_str());
             database.close();
-            res.set_content("GOT To Database Mapping", "text/plain");
+            res.set_redirect("/");
           });
         /*
         svr.Get(R"(/accounts/(\d+))", [&](const Request& req, Response& res) {
