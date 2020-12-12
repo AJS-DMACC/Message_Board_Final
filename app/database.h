@@ -23,6 +23,7 @@ public:
     void rebuild();
     void close();
     void createUser(const char*,const char*);
+    int validateCredentials(string, string);
 
 };
 

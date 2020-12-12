@@ -15,6 +15,7 @@ class HttpServer {
 private:
     char* domain = "localhost";
     int port = 8080;
+    int userId = -1;
 public:
     void startServer() {
         Server svr;
@@ -29,18 +30,17 @@ public:
             res.set_content(body.str(), "text/html");
         });        
 
-        svr.Post("/", [](const Request &req, Response &res) {
-            string formValue = req.get_param_value("username");
-            string formValue = req.get_param_value("username");
-            cout << "Username: " << formValue;
-            /*auto image_file = req.get_file_value("image_file");
-            auto text_file = req.get_file_value("text_file");
+        svr.Post("/", [this](const Request &req, Response &res) {
+            string username = req.get_param_value("username");
+            string password = req.get_param_value("username");
+            cout << "Username: " << username << " Passord: " << password << endl;
+            Database database; database.open();
+            if(database.validateCredentials(username, password) != -1){
+                userId = database.validateCredentials(username, password);
+                res.set_redirect("/home");
+            }
 
-            cout << "image file length: " << image_file.content.length() << endl
-                 << "image file name: " << image_file.filename << endl
-                 << "text file length: " << text_file.content.length() << endl
-                 << "text file name: " << text_file.filename << endl;*/
-
+            database.close();
             res.set_content("GOT To Post mapping", "text/plain");
           });
 
@@ -65,6 +65,16 @@ public:
             database.close();
             res.set_redirect("/");
           });
+
+        svr.Get("/home", [this](const Request&, Response& res) {
+            res.set_content(to_string(userId), "text/plain");
+            /*stringstream body;
+            body << formatPage();
+            body << "<h1>Wecome to the Discussion Board</h1>";
+            body << "<a>Make a post </a>";
+            body <<"</html>";
+            res.set_content(body.str(), "text/html");*/
+        });
         /*
         svr.Get(R"(/accounts/(\d+))", [&](const Request& req, Response& res) {
           Database database;

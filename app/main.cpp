@@ -6,7 +6,7 @@ using namespace std;
 bool rebuild=true;
 int main()
 {
-   // if(rebuild){Database database; database.open(); database.rebuild(); database.close();}
+    if(rebuild){Database database; database.open(); database.rebuild(); database.close();}
     /*Database db;
     db.open();
     db.rebuild();
