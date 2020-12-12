@@ -6,6 +6,7 @@
 #include <QCoreApplication>
 #include <QDir>
 #include <sstream>
+#include <map>
 #include "httplib.h"
 #include "database.h"
 using namespace std;
@@ -67,35 +68,63 @@ public:
           });
 
         svr.Get("/home", [this](const Request&, Response& res) {
-            res.set_content(to_string(userId), "text/plain");
-            /*stringstream body;
-            body << formatPage();
-            body << "<h1>Wecome to the Discussion Board</h1>";
-            body << "<a>Make a post </a>";
-            body <<"</html>";
-            res.set_content(body.str(), "text/html");*/
-        });
-        /*
-        svr.Get(R"(/accounts/(\d+))", [&](const Request& req, Response& res) {
-          Database database;
-            database.open();
-
-            int accountId = stoi(string(req.matches[1]));
-            Account account = Account(accountId);//This is assignment is redundant, but in there are no 0-args constructors for the account
-            bank.getDatabase().getAccount(accountId, account);
+            const char *html = R"(<div id=\"header\">
+                    <h2>Welcome to the Discussion Board</h2>
+                  <a href="logout">Logout</a>
+                  </div>
+                  <a href="newPost">Make A New Post</a>
+                  <table border=1>
+                    <tr><td>Most Recent Posts</td></tr>)";
             stringstream body;
-            body << "<html> <body style=\"background-color:grey;\">";
-
-            body << "<h1 style=\"background-color:blue; color:white;\"> Account #" << accountId << "</h1>";
-            body << "</hr><p>Balance: $" << account.getBalance() << "</p>";
-             TODO: Respond with a message containing the account id and balance.
-             * hint: Use bank.getDatabase().getAccount(accountId, account)
-
-            body << "</body></html>";
+            body << formatPage() << html;//format the start of the page
+            Database database; database.open();
+            if(database.hasPosts()){
+                map<int,string> posts = database.getPosts();//get the posts
+                map<int, string>::iterator itr; //set an iterator
+                for (itr = posts.begin(); itr != posts.end(); ++itr) {//for each post, set a link to that post, where the post id is in the url
+                   // cout << "POST " << itr->first << " : " << itr->second << endl;
+                    string concat =  "<tr><td><a href=\"viewpost/";
+                    concat.append(to_string(itr->first));
+                    body << concat << "\">" << itr->second << "</a></td></tr>";
+                }
+            }
+            //for each post, get its id and title, and put it as a headline
+            body << " </table></html>";
             res.set_content(body.str(), "text/html");
+        });
+
+        svr.Get("/logout", [this](const Request&, Response& res) {
+            userId = -1;
+            res.set_redirect("/");
+        });
+
+        svr.Get("/newPost", [this](const Request&, Response& res) {
+            const char *html = R"(<div id="header">
+                               <h1>Make A New Post</h1>
+                               </div>
+                               <form method="POST">
+                               <p>Title</p>
+                               <input name="title" type="text" />
+                               <p>Body</p>
+                               <textarea cols="40" name="body" rows="6"></textarea>
+                                <input type="submit" value="Post" style="width:50%;">
+                               </form>)";
+            stringstream body;
+            body << formatPage() << html;
+            res.set_content(body.str(), "text/html");
+        });
+
+        svr.Post("/newPost", [this](const Request &req, Response& res) {
+            string title = req.get_param_value("title");
+            string body = req.get_param_value("body");
+
+            Database database;
+            database.open();
+            database.createPost(userId, title.c_str(), body.c_str());
             database.close();
 
-        });*/
+            res.set_redirect("/home");
+        });
 
         cout << "Starting this server at http://" << domain << ":" << port << endl;
         svr.listen(domain, port);

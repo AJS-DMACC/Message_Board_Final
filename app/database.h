@@ -10,6 +10,7 @@
 #include <QSqlQuery>
 #include <QDebug>
 #include <memory>
+#include <map>
 using namespace std;
 
 class Database {
@@ -23,6 +24,9 @@ public:
     void rebuild();
     void close();
     void createUser(const char*,const char*);
+    bool createPost(int, const char*, const char*);
+    bool hasPosts();
+    map<int, string>getPosts();
     int validateCredentials(string, string);
 
 };
