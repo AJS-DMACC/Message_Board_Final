@@ -9,6 +9,7 @@
 #include <map>
 #include "httplib.h"
 #include "database.h"
+#include "user.h"
 using namespace std;
 using namespace httplib;
 
@@ -126,9 +127,65 @@ public:
             res.set_redirect("/home");
         });
 
+        svr.Get(R"(/viewpost/(\d+))", [&](const Request& req, Response& res) {
+            Database database;
+            database.open();
+            const char *html = R"(</h3>
+                                    <p>
+                                      Comments:
+                                    </p>
+                                    <table border=1>
+                                      <tr><td>
+                                        <form method=POST>
+                                          <input type="text" placeholder="Make a Comment" name="comment">
+                                          <input type="submit"  value="Comment">
+                                        </form>
+                                        </td></tr>)";
+            int postID = stoi(string(req.matches[1]));
+            cout << "Post request id " << postID << endl;
+            post Post = database.getPostById(postID);//get the Post from the database
+            user User = database.getUserByPostId(postID);
+            stringstream body;
+            body<< formatPage() << "<div id=\"header\"><h1>" << Post.getTitle();
+            body<< "</h1><a href=\"viewprofile/" << User.getUserId() << "\">post created by:  USERNAME</a><br><a href=\"/home\">back</a></div><h3>";
+            body<< Post.getBody();
+            body<< html;
+            body<< "</table>";
+            body << "</body></html>";
+
+            const char *html1 = R"(<div id="header">
+                               <h1>
+                                 TITLE
+                               </h1>
+                               <a href="viewprofile/USERID">post created by:  USERNAME</a>
+                               <br>
+                               <a href="home">back</a>
+                             </div>
+                             <h3>
+                               BODY TEXT GOES HERE
+                             </h3>
+                             <p>
+                               Comments:
+                             </p>
+                             <table border=1>
+                               <tr><td>
+                                 <form method=POST>
+                                   <input type="text" placeholder="Make a Comment" name="comment">
+                                   <input type="submit"  value="Comment">
+                                 </form>
+                                 </td></tr>
+                               <tr><td><p>
+                                 comment.getText();
+                                 </p></td></tr>
+                             </table>)";
+
+            res.set_content(body.str(), "text/html");
+            database.close();
+        });
+
         cout << "Starting this server at http://" << domain << ":" << port << endl;
-        svr.listen(domain, port);
-    }
+        svr.listen(domain, port);                
+    }        
 
     string formatPage(){
         stringstream css;

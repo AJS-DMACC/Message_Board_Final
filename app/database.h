@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <memory>
 #include <map>
+#include "post.h"
+#include "user.h"
 using namespace std;
 
 class Database {
@@ -27,8 +29,11 @@ public:
     bool createPost(int, const char*, const char*);
     bool hasPosts();
     map<int, string>getPosts();
+    post getPostById(int);
+    user getUserByPostId(int);
     int validateCredentials(string, string);
-
+    void createComment(int ,const char*);
+    string* getCommentsByPostId(int, size_t&);
 };
 
 #endif // DATABASE_H

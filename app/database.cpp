@@ -26,9 +26,11 @@ void Database::rebuild(){
     QSqlQuery query1(db);
     cout << query1.exec("DROP TABLE IF EXISTS Users") << endl;
     cout << query1.exec("DROP TABLE IF EXISTS Posts") << endl;
+    cout << query1.exec("DROP TABLE IF EXISTS Comments") << endl;
     QSqlQuery query(db);
     cout << query.exec("CREATE TABLE IF NOT EXISTS Users(USER_ID integer primary key, USERNAME varchar(30) not null, PASSWORD varchar(30) not null);") << endl;
     cout << query.exec("CREATE TABLE IF NOT EXISTS Posts(POST_ID integer primary key, USER_ID int not null, TITLE varchar(30) not null, BODY varchar(255) not null);") << endl;
+    cout << query.exec("CREATE TABLE IF NOT EXISTS Comments(COMMENT_ID integer primary key, POST_ID int not null,TEXT varchar(255) not null);") << endl;
 }
 
 void Database::createUser(const char* username,const char* password){
@@ -101,4 +103,61 @@ map<int, string> Database::getPosts(){
         posts.insert(pair<int,string>(getPosts.value(0).toInt(), getPosts.value(1).toString().toStdString()));
     }
     return posts;
+}
+
+post Database::getPostById(int id){
+    QSqlQuery getPost;
+    getPost.prepare("SELECT USER_ID, TITLE, BODY FROM Posts WHERE POST_ID = :postId");
+    getPost.bindValue(":postId",id);
+    getPost.exec();
+    getPost.next();
+    long userId = getPost.value(0).toInt();
+    string title = getPost.value(1).toString().toStdString();
+    string body = getPost.value(2).toString().toStdString();
+    post returnPost(id, userId, title, body);
+    return returnPost;
+}
+
+user Database::getUserByPostId(int id){
+    QSqlQuery getPost;
+    getPost.prepare("SELECT USER_ID FROM Posts WHERE POST_ID = :postId");
+    getPost.bindValue(":postId",id);
+    getPost.exec();
+    getPost.next();
+    int userId = getPost.value(0).toInt();
+    QSqlQuery getUser;
+    getUser.prepare("SELECT USERNAME, PASSWORD FROM Users WHERE USER_ID = :userId");
+    getUser.bindValue(":userId",userId);
+    getUser.exec();
+    getUser.next();
+    string username = getPost.value(0).toString().toStdString();
+    string password = getPost.value(1).toString().toStdString();
+    user returnUser(userId, username, password);
+    return returnUser;
+}
+
+string[] Database::getCommentsByPostId(int id){
+    QSqlQuery getPost;
+    getPost.prepare("SELECT USER_ID FROM Posts WHERE POST_ID = :postId");
+    getPost.bindValue(":postId",id);
+    getPost.exec();
+    getPost.next();
+    int userId = getPost.value(0).toInt();
+    QSqlQuery getUser;
+    getUser.prepare("SELECT USERNAME, PASSWORD FROM Users WHERE USER_ID = :userId");
+    getUser.bindValue(":userId",userId);
+    getUser.exec();
+    getUser.next();
+    string username = getPost.value(0).toString().toStdString();
+    string password = getPost.value(1).toString().toStdString();
+    user returnUser(userId, username, password);
+    return returnUser;
+}
+
+void Database::createPost(int postId,const char* text){
+    QSqlQuery insertComment(db);
+    insertComment.prepare("INSERT INTO Comments (POST_ID, TEXT) VALUES (:postId, :text)");
+    insertComment.bindValue(":postId", postId);
+    insertComment.bindValue(":text",  text);
+    insertComment.exec();
 }
