@@ -11,6 +11,7 @@
 #include <QDebug>
 #include <memory>
 #include <map>
+#include <vector>
 #include "post.h"
 #include "user.h"
 using namespace std;
@@ -29,11 +30,13 @@ public:
     bool createPost(int, const char*, const char*);
     bool hasPosts();
     map<int, string>getPosts();
+    map<int, string>getUserPosts(int);
     post getPostById(int);
     user getUserByPostId(int);
     int validateCredentials(string, string);
     void createComment(int ,const char*);
-    string* getCommentsByPostId(int, size_t&);
+    vector<string> getCommentsByPostId(int);
+    string getUsernameById(int);
 };
 
 #endif // DATABASE_H

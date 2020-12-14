@@ -3,7 +3,7 @@
 #include "database.h"
 using namespace std;
 
-bool rebuild=true;
+bool rebuild=false;
 int main()
 {
     if(rebuild){Database database; database.open(); database.rebuild(); database.close();}

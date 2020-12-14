@@ -31,6 +31,7 @@ void Database::rebuild(){
     cout << query.exec("CREATE TABLE IF NOT EXISTS Users(USER_ID integer primary key, USERNAME varchar(30) not null, PASSWORD varchar(30) not null);") << endl;
     cout << query.exec("CREATE TABLE IF NOT EXISTS Posts(POST_ID integer primary key, USER_ID int not null, TITLE varchar(30) not null, BODY varchar(255) not null);") << endl;
     cout << query.exec("CREATE TABLE IF NOT EXISTS Comments(COMMENT_ID integer primary key, POST_ID int not null,TEXT varchar(255) not null);") << endl;
+
 }
 
 void Database::createUser(const char* username,const char* password){
@@ -105,6 +106,19 @@ map<int, string> Database::getPosts(){
     return posts;
 }
 
+map<int, string> Database::getUserPosts(int id){
+    map<int, string> posts;
+    QSqlQuery getPosts;
+    getPosts.prepare("SELECT POST_ID, TITLE FROM Posts WHERE USER_ID = :userId;");
+    getPosts.bindValue(":userId", id);
+    cout << "Get Posts Sucess" << getPosts.exec() << endl;
+    while(getPosts.next()){
+        cout << getPosts.value(1).toString().toStdString();
+        posts.insert(pair<int,string>(getPosts.value(0).toInt(), getPosts.value(1).toString().toStdString()));
+    }
+    return posts;
+}
+
 post Database::getPostById(int id){
     QSqlQuery getPost;
     getPost.prepare("SELECT USER_ID, TITLE, BODY FROM Posts WHERE POST_ID = :postId");
@@ -130,34 +144,38 @@ user Database::getUserByPostId(int id){
     getUser.bindValue(":userId",userId);
     getUser.exec();
     getUser.next();
-    string username = getPost.value(0).toString().toStdString();
-    string password = getPost.value(1).toString().toStdString();
+    string username = getUser.value(0).toString().toStdString();
+    string password = getUser.value(1).toString().toStdString();
     user returnUser(userId, username, password);
     return returnUser;
 }
 
-string[] Database::getCommentsByPostId(int id){
-    QSqlQuery getPost;
-    getPost.prepare("SELECT USER_ID FROM Posts WHERE POST_ID = :postId");
-    getPost.bindValue(":postId",id);
-    getPost.exec();
-    getPost.next();
-    int userId = getPost.value(0).toInt();
-    QSqlQuery getUser;
-    getUser.prepare("SELECT USERNAME, PASSWORD FROM Users WHERE USER_ID = :userId");
-    getUser.bindValue(":userId",userId);
-    getUser.exec();
-    getUser.next();
-    string username = getPost.value(0).toString().toStdString();
-    string password = getPost.value(1).toString().toStdString();
-    user returnUser(userId, username, password);
-    return returnUser;
+vector<string> Database::getCommentsByPostId(int id){
+    vector<string> comments;
+    QSqlQuery getComments;
+    getComments.prepare("SELECT TEXT FROM Comments WHERE POST_ID = :postId");
+    getComments.bindValue(":postId",id);
+    getComments.exec();
+    while(getComments.next()){
+        comments.push_back(getComments.value(0).toString().toStdString());
+    }
+    return comments;
 }
 
-void Database::createPost(int postId,const char* text){
+string Database::getUsernameById(int id){
+    QSqlQuery getUsername;
+    getUsername.prepare("SELECT USERNAME FROM Users WHERE USER_ID = :userId");
+    getUsername.bindValue(":userId",id);
+    getUsername.exec();
+    getUsername.next();
+    return getUsername.value(0).toString().toStdString();
+}
+
+void Database::createComment(int postId,const char* text){
     QSqlQuery insertComment(db);
-    insertComment.prepare("INSERT INTO Comments (POST_ID, TEXT) VALUES (:postId, :text)");
+    insertComment.prepare("INSERT INTO Comments(POST_ID, TEXT) VALUES (:postId, :text)");
     insertComment.bindValue(":postId", postId);
     insertComment.bindValue(":text",  text);
-    insertComment.exec();
+    cout<< "Post ID: " << to_string(postId) << " text: " << text<< endl;
+    cout<< "Creating comment sucess: " << insertComment.exec() << endl;
 }
