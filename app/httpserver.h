@@ -34,23 +34,28 @@ public:
 
         svr.Post("/", [this](const Request &req, Response &res) {
             string username = req.get_param_value("username");
-            string password = req.get_param_value("username");
+            string password = req.get_param_value("password");
+            if(username != "" && password != ""){
             cout << "Username: " << username << " Passord: " << password << endl;
             Database database; database.open();
             if(database.validateCredentials(username, password) != -1){
                 userId = database.validateCredentials(username, password);
                 res.set_redirect("/home");
             }
-
+            else{
+                res.set_redirect("/");
+            }
             database.close();
-            res.set_content("GOT To Post mapping", "text/plain");
+            }else{
+                res.set_redirect("/");
+            }
           });
 
 
         svr.Get("/signup", [this](const Request&, Response& res) {
             stringstream body;
             body << formatPage();
-            body << "<h1>Sign Up for the Discussion Board</h1><form method = \"POST\"><p>Create a Username</p>";
+            body << "<div class=\"header\"><h1>Sign Up for the Discussion Board</h1></div><form method = \"POST\"><p>Create a Username</p>";
             body << "<input type=\"text\" name=\"username\"><p>Create a Password </p><input type=\"text\" name=\"password\" >";
             body << "<input type=\"submit\">";
             body <<"</form></html>";
@@ -60,16 +65,19 @@ public:
         svr.Post("/signup", [](const Request &req, Response &res) {
             string username = req.get_param_value("username");
             string password = req.get_param_value("password");
-
+            if(username != "" && password != ""){
             Database database;
             database.open();
             database.createUser(username.c_str(), password.c_str());
             database.close();
-            res.set_redirect("/");
+            res.set_redirect("/");}
+            else{
+                res.set_redirect("/signup");
+            }
           });
 
         svr.Get("/home", [this](const Request&, Response& res) {
-            const char *html = R"(<div id="header">
+            const char *html = R"(<div class="header">
                     <h2>Welcome to the Discussion Board</h2>
                   <a href="logout">Logout</a>
                   </div>
@@ -100,7 +108,7 @@ public:
         });
 
         svr.Get("/newPost", [this](const Request&, Response& res) {
-            const char *html = R"(<div id="header">
+            const char *html = R"(<div class="header">
                                <h1>Make A New Post</h1>
                                </div>
                                <form method="POST">
@@ -119,12 +127,14 @@ public:
             string title = req.get_param_value("title");
             string body = req.get_param_value("body");
 
+            if(title != "" && body != ""){
             Database database;
             database.open();
             database.createPost(userId, title.c_str(), body.c_str());
             database.close();
-
+            }
             res.set_redirect("/home");
+
         });
 
         svr.Get(R"(/viewpost/(\d+))", [&](const Request& req, Response& res) {
@@ -148,7 +158,7 @@ public:
             vector<string> comments = database.getCommentsByPostId(postID);
 
             stringstream body;
-            body<< formatPage() << "<div id=\"header\"><h1>" << Post.getTitle();
+            body<< formatPage() << "<div class=\"header\"><h1>" << Post.getTitle();
             body<< "</h1><a href=\"/viewprofile/" << User.getUserId() << "\">post created by:  " << User.getUsername() << "</a><br><a href=\"/home\">back</a></div><h3>";
             body<< Post.getBody();
             body<< html;
@@ -174,7 +184,7 @@ public:
         });
 
         svr.Get(R"(/viewprofile/(\d+))", [this](const Request&req, Response& res) {
-            const char *html = R"(<div id=\"header\">
+            const char *html = R"(<div class=\"header\">
                   <a href="/home">Home</a>)";
             stringstream body;
             body << formatPage() << html;//format the start of the page
@@ -204,9 +214,9 @@ public:
     string formatPage(){
         const char *format = R"(/* W3.CSS 4.15 December 2020 by Jan Egil and Borge Refsnes */
                              html{box-sizing:border-box}*,*:before,*:after{box-sizing:inherit}
-                             .header{width:100%; text-align:center; background-color:#00ff00;}
+                             .header{width:100%; text-align:center; background-color:#db5461;}
                              /* Extract from normalize.css by Nicolas Gallagher and Jonathan Neal git.io/normalize */
-                             html{background-color:#cfcfcf; -ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin: 30; padding:30; background-color:#efefef;}
+                             html{background-color:#8aa29e; -ms-text-size-adjust:100%;-webkit-text-size-adjust:100%}body{margin: 30; padding:30; background-color:#fafafa;}
                              article,aside,details,figcaption,figure,footer,header,main,menu,nav,section{display:block}summary{display:list-item}
                              audio,canvas,progress,video{display:inline-block}progress{vertical-align:baseline}
                              audio:not([controls]){display:none;height:0}[hidden],template{display:none}
@@ -230,10 +240,12 @@ public:
                              ::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}
                              /* End extract */
                              html,body{font-family:Verdana,sans-serif;font-size:15px;line-height:1.5}html{overflow-x:hidden}
-                             h1{font-size:36px}h2{font-size:30px}h3{font-size:24px}h4{font-size:20px}h5{font-size:18px}h6{font-size:16px}
+                             h1{font-size:46px}h2{font-size:38px}h3{font-size:24px}h4{font-size:20px}h5{font-size:18px}h6{font-size:16px}
                              .w3-serif{font-family:serif}.w3-sans-serif{font-family:sans-serif}.w3-cursive{font-family:cursive}.w3-monospace{font-family:monospace}
                              h1,h2,h3,h4,h5,h6{font-family:"Segoe UI",Arial,sans-serif;font-weight:400;margin:10px 0}.w3-wide{letter-spacing:4px}
-                             hr{border:0;border-top:1px solid #eee;margin:20px 0})";
+                             hr{border:0;border-top:1px solid #eee;margin:20px 0}
+                             table{width:70%;  margin-left: auto; margin-right: auto;}
+                             td{font-size:28px;})";
         stringstream css;
         css << "<html><head><style>";
         css<< format << " </style>";
